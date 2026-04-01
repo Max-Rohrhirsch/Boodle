@@ -7,11 +7,11 @@ COPY gradle gradle
 COPY build.gradle.kts settings.gradle.kts ./
 
 RUN chmod +x gradlew
-RUN ./gradlew dependencies --no-daemon || true
+RUN --mount=type=cache,target=/root/.gradle ./gradlew dependencies --no-daemon || true
 
 COPY src src
 
-RUN ./gradlew bootJar --no-daemon -x test
+RUN --mount=type=cache,target=/root/.gradle ./gradlew bootJar --no-daemon --build-cache -x test
 
 FROM eclipse-temurin:21-jre
 
