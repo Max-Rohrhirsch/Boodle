@@ -1,0 +1,47 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h1>Kurse verwalten</h1>
+    <button class="btn btn-primary" (click)="toggleForm()">
+      {{ showForm() ? 'Abbrechen' : '+ Neuer Kurs' }}
+    </button>
+  </div>
+
+  <div class="form-section" *ngIf="showForm()">
+    <h2>{{ editingId() ? 'Kurs bearbeiten' : 'Neuen Kurs erstellen' }}</h2>
+    <form (ngSubmit)="onSubmit()">
+      <input type="text" [(ngModel)]="formData.name" name="name" placeholder="Kursname" required />
+      <input type="text" [(ngModel)]="formData.dozentMatr" name="dozentMatr" placeholder="Dozent Matrikelnummer" required />
+      <input type="text" [(ngModel)]="formData.kurssprecher1Matr" name="kurssprecher1Matr" placeholder="Kurssprecher 1 (optional)" />
+      <input type="text" [(ngModel)]="formData.kurssprecher2Matr" name="kurssprecher2Matr" placeholder="Kurssprecher 2 (optional)" />
+      <button type="submit" class="btn btn-success">{{ editingId() ? 'Aktualisieren' : 'Erstellen' }}</button>
+    </form>
+    <p *ngIf="message()" [ngClass]="messageType()">{{ message() }}</p>
+  </div>
+
+  <div class="list-section">
+    <h2>Alle Kurse</h2>
+    <p *ngIf="loading()">Laden...</p>
+    <table *ngIf="!loading() && kurse().length > 0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Dozent</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let kurs of kurse()">
+          <td>{{ kurs.id }}</td>
+          <td>{{ kurs.name }}</td>
+          <td>{{ kurs.dozentMatr }}</td>
+          <td>
+            <button class="btn btn-sm btn-secondary" (click)="onEdit(kurs)">Bearbeiten</button>
+            <button class="btn btn-sm btn-danger" (click)="onDelete(kurs.id)">Löschen</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!loading() && kurse().length === 0">Keine Kurse gefunden.</p>
+  </div>
+</div>
