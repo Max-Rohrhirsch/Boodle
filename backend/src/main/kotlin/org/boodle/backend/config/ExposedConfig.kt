@@ -16,10 +16,6 @@ class ExposedConfig(private val dataSource: DataSource) {
         val database = Database.connect(dataSource)
         transaction(database) {
             SchemaUtils.createMissingTablesAndColumns(UsersTable)
-
-            // Cleanup for old schema versions where users.student existed as NOT NULL.
-            // The current model uses matrikelnummer as identifier and no student column.
-            exec("ALTER TABLE users DROP COLUMN IF EXISTS student")
         }
         return database
     }
