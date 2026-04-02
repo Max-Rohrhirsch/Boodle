@@ -1,6 +1,10 @@
 package org.boodle.backend.config
 
 import org.boodle.backend.model.UsersTable
+import org.boodle.backend.model.KursTable
+import org.boodle.backend.model.VorlesungTable
+import org.boodle.backend.model.KursInLectureTable
+import org.boodle.backend.model.LectureEnrollmentTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -15,7 +19,8 @@ class ExposedConfig(private val dataSource: DataSource) {
     fun setupExposed(): Database {
         val database = Database.connect(dataSource)
         transaction(database) {
-            SchemaUtils.createMissingTablesAndColumns(UsersTable)
+            SchemaUtils.drop(LectureEnrollmentTable, KursInLectureTable, VorlesungTable, KursTable, UsersTable)
+            SchemaUtils.create(UsersTable, KursTable, VorlesungTable, KursInLectureTable, LectureEnrollmentTable)
         }
         return database
     }
