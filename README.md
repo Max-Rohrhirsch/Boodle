@@ -3,6 +3,11 @@
 docker compose up --build
 ```
 
+# Test the Backend
+```bash
+Set-Location backend; .\gradlew.bat test
+```
+
 # Environment Variables
 Rename the `.env.example` into `.env` and change the keys!
 
@@ -28,7 +33,7 @@ docker compose up --build
 
 # To-DO:
 - [X] Make JTW work
-- [ ] Create some simple Tests
+- [X] Create some simple Tests
 - [ ] Create Database Tables
 - [ ] Create Tests for them. (Only integration tests, because there is almost no logik)
 - [ ] Create frontend for login and header
