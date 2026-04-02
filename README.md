@@ -5,7 +5,14 @@ docker compose up --build
 
 # Test the Backend
 ```bash
-Set-Location backend; .\gradlew.bat test
+.\backend\gradlew.bat -p backend test --console=plain --rerun-tasks --no-build-cache
+```
+
+# Count Lines
+```bash
+git ls-files -z \
+| grep -zv -E 'frontend/package-lock.json|backend/gradle/|README\.md|backend/gradlew(\.bat)?' \
+| xargs -0 wc -l
 ```
 
 # Environment Variables
@@ -34,8 +41,8 @@ docker compose up --build
 # To-DO:
 - [X] Make JTW work
 - [X] Create some simple Tests
-- [ ] Create Database Tables
-- [ ] Create Tests for them. (Only integration tests, because there is almost no logik)
+- [X] Create Database Tables
+- [X] Create Tests for them.
 - [ ] Create frontend for login and header
 - [ ] Create frontend for User and Kurs managment
 - [ ] Check in Backend if User has enauth rights
