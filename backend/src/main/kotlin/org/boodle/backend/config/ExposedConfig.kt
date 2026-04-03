@@ -2,6 +2,7 @@ package org.boodle.backend.config
 
 import org.boodle.backend.model.UsersTable
 import org.boodle.backend.model.KursTable
+import org.boodle.backend.model.KursEnrollmentTable
 import org.boodle.backend.model.VorlesungTable
 import org.boodle.backend.model.KursInLectureTable
 import org.boodle.backend.model.LectureEnrollmentTable
@@ -27,6 +28,7 @@ class ExposedConfig(private val dataSource: DataSource) {
                 RegulaereStundeTable,
                 LectureEnrollmentTable,
                 KursInLectureTable,
+                KursEnrollmentTable,
                 RaumTable,
                 VorlesungTable,
                 KursTable,
@@ -38,6 +40,7 @@ class ExposedConfig(private val dataSource: DataSource) {
                 VorlesungTable,
                 RaumTable,
                 KursInLectureTable,
+                KursEnrollmentTable,
                 LectureEnrollmentTable,
                 RegulaereStundeTable,
                 UnregulaereStundeTable

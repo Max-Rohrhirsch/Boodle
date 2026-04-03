@@ -7,6 +7,7 @@ import org.boodle.backend.model.InvalidVorlesungInputException
 import org.boodle.backend.model.VorlesungNotFoundException
 import org.boodle.backend.model.VorlesungService
 import org.boodle.backend.model.LectureEnrollmentService
+import org.boodle.backend.model.KursInLectureService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -24,7 +25,8 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Lectures")
 class LectureController(
     private val vorlesungService: VorlesungService,
-    private val lectureEnrollmentService: LectureEnrollmentService
+    private val lectureEnrollmentService: LectureEnrollmentService,
+    private val kursInLectureService: KursInLectureService
 ) {
 
     @GetMapping
@@ -45,6 +47,15 @@ class LectureController(
     fun getVorlesungById(@PathVariable id: Int): ResponseEntity<Any> =
         try {
             ResponseEntity.ok(vorlesungService.getVorlesungById(id))
+        } catch (e: VorlesungNotFoundException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Vorlesung not found"))
+        }
+
+    @GetMapping("/{id}/kurse")
+    @Operation(summary = "Get courses assigned to lecture")
+    fun getKurseForVorlesung(@PathVariable id: Int): ResponseEntity<Any> =
+        try {
+            ResponseEntity.ok(kursInLectureService.getKurseForLecture(id))
         } catch (e: VorlesungNotFoundException) {
             ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Vorlesung not found"))
         }
@@ -121,6 +132,15 @@ class LectureController(
     fun getEnrolledStudents(@PathVariable id: Int): ResponseEntity<Any> =
         try {
             ResponseEntity.ok(lectureEnrollmentService.getEnrolledStudents(id))
+        } catch (e: VorlesungNotFoundException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Vorlesung not found"))
+        }
+
+    @GetMapping("/{id}/students/details")
+    @Operation(summary = "Get all enrolled students with detail")
+    fun getEnrolledStudentDetails(@PathVariable id: Int): ResponseEntity<Any> =
+        try {
+            ResponseEntity.ok(lectureEnrollmentService.getEnrolledStudentUsers(id))
         } catch (e: VorlesungNotFoundException) {
             ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Vorlesung not found"))
         }

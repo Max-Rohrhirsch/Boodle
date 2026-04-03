@@ -7,12 +7,12 @@
   </div>
 
   <div class="form-section" *ngIf="showForm()">
-    <h2>Neuen User erstellen</h2>
+    <h2>{{ editingMatr() ? 'User bearbeiten' : 'Neuen User erstellen' }}</h2>
     <form (ngSubmit)="onSubmit()">
-      <input type="text" [(ngModel)]="formData.matr" name="matr" placeholder="Matrikelnummer" required />
+      <input type="text" [(ngModel)]="formData.matr" name="matr" placeholder="Matrikelnummer" [readonly]="!!editingMatr()" required />
       <input type="text" [(ngModel)]="formData.name" name="name" placeholder="Name" required />
       <input type="email" [(ngModel)]="formData.email" name="email" placeholder="E-Mail" required />
-      <input type="password" [(ngModel)]="formData.password" name="password" placeholder="Passwort (min. 8 Zeichen)" required />
+      <input *ngIf="!editingMatr()" type="password" [(ngModel)]="formData.password" name="password" placeholder="Passwort (min. 8 Zeichen)" required />
       <select [(ngModel)]="formData.rolle" name="rolle" required>
         <option value="">-- Rolle auswählen --</option>
         <option value="STUDENT">Student</option>
@@ -20,7 +20,7 @@
         <option value="KURSSPRECHER">Kurssprecher</option>
         <option value="ADMIN">Admin</option>
       </select>
-      <button type="submit" class="btn btn-success">Erstellen</button>
+      <button type="submit" class="btn btn-success">{{ editingMatr() ? 'Aktualisieren' : 'Erstellen' }}</button>
     </form>
     <p *ngIf="message()" [ngClass]="messageType()">{{ message() }}</p>
   </div>
@@ -35,6 +35,7 @@
           <th>Name</th>
           <th>E-Mail</th>
           <th>Rolle</th>
+          <th>Aktionen</th>
         </tr>
       </thead>
       <tbody>
@@ -43,6 +44,10 @@
           <td>{{ user.name }}</td>
           <td>{{ user.email }}</td>
           <td>{{ user.rolle }}</td>
+          <td>
+            <button class="btn btn-sm btn-secondary" (click)="onEdit(user)">Bearbeiten</button>
+            <button class="btn btn-sm btn-danger" (click)="onDelete(user.matr)">Löschen</button>
+          </td>
         </tr>
       </tbody>
     </table>

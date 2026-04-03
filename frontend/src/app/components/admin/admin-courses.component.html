@@ -10,11 +10,19 @@
     <h2>{{ editingId() ? 'Kurs bearbeiten' : 'Neuen Kurs erstellen' }}</h2>
     <form (ngSubmit)="onSubmit()">
       <input type="text" [(ngModel)]="formData.name" name="name" placeholder="Kursname" required />
-      <input type="text" [(ngModel)]="formData.dozentMatr" name="dozentMatr" placeholder="Dozent Matrikelnummer" required />
-      <input type="text" [(ngModel)]="formData.kurssprecher1Matr" name="kurssprecher1Matr" placeholder="Kurssprecher 1 (optional)" />
-      <input type="text" [(ngModel)]="formData.kurssprecher2Matr" name="kurssprecher2Matr" placeholder="Kurssprecher 2 (optional)" />
+      <input type="text" [(ngModel)]="formData.dozentMatr" name="dozentMatr" placeholder="Dozent Matrikelnummer" required list="dozenten-list" (ngModelChange)="onDozentInput($event)" />
+      <datalist id="dozenten-list">
+        <option *ngFor="let user of dozentSuggestions()" [value]="user.matr">{{ displayUserSuggestion(user) }}</option>
+      </datalist>
+
+      <input type="text" [(ngModel)]="formData.kurssprecher1Matr" name="kurssprecher1Matr" placeholder="Kurssprecher 1 (optional)" list="kurssprecher-list" (ngModelChange)="onKurssprecherInput($event)" />
+      <input type="text" [(ngModel)]="formData.kurssprecher2Matr" name="kurssprecher2Matr" placeholder="Kurssprecher 2 (optional)" list="kurssprecher-list" (ngModelChange)="onKurssprecherInput($event)" />
+      <datalist id="kurssprecher-list">
+        <option *ngFor="let user of kurssprecherSuggestions()" [value]="user.matr">{{ displayUserSuggestion(user) }}</option>
+      </datalist>
       <button type="submit" class="btn btn-success">{{ editingId() ? 'Aktualisieren' : 'Erstellen' }}</button>
     </form>
+    <p class="helper">Autocomplete: Suche nach Name oder Matrikelnummer, dann Vorschlag waehlen.</p>
     <p *ngIf="message()" [ngClass]="messageType()">{{ message() }}</p>
   </div>
 
@@ -38,10 +46,61 @@
           <td>
             <button class="btn btn-sm btn-secondary" (click)="onEdit(kurs)">Bearbeiten</button>
             <button class="btn btn-sm btn-danger" (click)="onDelete(kurs.id)">Löschen</button>
+            <button class="btn btn-sm btn-primary" (click)="openLectureManagement(kurs.id)">Vorlesungen</button>
           </td>
         </tr>
       </tbody>
     </table>
     <p *ngIf="!loading() && kurse().length === 0">Keine Kurse gefunden.</p>
+  </div>
+
+  <div class="form-section" *ngIf="managingCourseId()">
+    <h2>Vorlesungen fuer Kurs #{{ managingCourseId() }} verwalten</h2>
+    <div class="inline-row">
+      <input
+        type="text"
+        [ngModel]="lectureQuery"
+        (ngModelChange)="onLectureSearch($event)"
+        placeholder="Vorlesung suchen (Code/Name)"
+        list="lecture-list"
+      />
+      <datalist id="lecture-list">
+        <option *ngFor="let lecture of lectureSuggestions()" [value]="lecture.id">{{ displayLectureSuggestion(lecture) }}</option>
+      </datalist>
+    </div>
+
+    <div class="suggestion-list" *ngIf="lectureSuggestions().length > 0">
+      <button type="button" class="btn btn-sm btn-success" *ngFor="let lecture of lectureSuggestions()" (click)="assignLectureToCurrentCourse(lecture.id)">
+        + {{ displayLectureSuggestion(lecture) }}
+      </button>
+    </div>
+
+    <h3>Zugeordnete Vorlesungen</h3>
+    <p *ngIf="assignedLectures().length === 0">Keine Vorlesungen zugeordnet.</p>
+    <ul *ngIf="assignedLectures().length > 0" class="assignment-list">
+      <li *ngFor="let lecture of assignedLectures()">
+        <span>{{ displayLectureSuggestion(lecture) }}</span>
+        <button type="button" class="btn btn-sm btn-danger" (click)="removeLectureFromCurrentCourse(lecture.id)">Entfernen</button>
+      </li>
+    </ul>
+
+    <h3>Studenten zuordnen</h3>
+    <input type="text" [ngModel]="studentQuery" (ngModelChange)="onStudentSearch($event)" placeholder="Student suchen" list="student-list" />
+    <datalist id="student-list">
+      <option *ngFor="let student of studentSuggestions()" [value]="student.matr">{{ displayStudentSuggestion(student) }}</option>
+    </datalist>
+    <div class="suggestion-list" *ngIf="studentSuggestions().length > 0">
+      <button type="button" class="btn btn-sm btn-success" *ngFor="let student of studentSuggestions()" (click)="enrollStudentToCurrentCourse(student.matr)">
+        + {{ displayStudentSuggestion(student) }}
+      </button>
+    </div>
+
+    <ul class="assignment-list" *ngIf="assignedStudents().length > 0">
+      <li *ngFor="let student of assignedStudents()">
+        <span>{{ displayStudentSuggestion(student) }}</span>
+        <button type="button" class="btn btn-sm btn-danger" (click)="removeStudentFromCurrentCourse(student.matr)">Entfernen</button>
+      </li>
+    </ul>
+    <p *ngIf="assignedStudents().length === 0">Keine Studenten zugeordnet.</p>
   </div>
 </div>

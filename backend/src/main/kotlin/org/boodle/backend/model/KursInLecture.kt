@@ -2,6 +2,7 @@ package org.boodle.backend.model
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -51,5 +52,31 @@ class KursInLectureService {
             (KursInLectureTable.vorlesungId eq vorlesungId)
         }
         if (deleted == 0) throw KursInLectureAlreadyExistsException(kursId, vorlesungId)
+    }
+
+    fun getLecturesForKurs(kursId: Int): List<VorlesungLookupDTO> = transaction {
+        Kurs.findById(kursId) ?: throw KursNotFoundException(kursId)
+
+        val lectureIds = KursInLectureTable
+            .select { KursInLectureTable.kursId eq kursId }
+            .map { it[KursInLectureTable.vorlesungId] }
+
+        if (lectureIds.isEmpty()) return@transaction emptyList()
+
+        Vorlesung.find { VorlesungTable.id inList lectureIds }
+            .map { it.toLookupDTO() }
+    }
+
+    fun getKurseForLecture(vorlesungId: Int): List<KursLookupDTO> = transaction {
+        Vorlesung.findById(vorlesungId) ?: throw VorlesungNotFoundException(vorlesungId)
+
+        val kursIds = KursInLectureTable
+            .select { KursInLectureTable.vorlesungId eq vorlesungId }
+            .map { it[KursInLectureTable.kursId] }
+
+        if (kursIds.isEmpty()) return@transaction emptyList()
+
+        Kurs.find { KursTable.id inList kursIds }
+            .map { it.toLookupDTO() }
     }
 }

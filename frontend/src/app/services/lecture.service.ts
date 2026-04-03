@@ -2,6 +2,24 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+export interface VorlesungLookupDto {
+  id: number;
+  code: string;
+  name: string;
+}
+
+export interface KursLookupDto {
+  id: number;
+  name: string;
+}
+
+export interface UserLookupDto {
+  matr: string;
+  name: string;
+  email: string;
+  rolle: string;
+}
+
 export interface VorlesungDto {
   id: number;
   code: string;
@@ -33,6 +51,29 @@ export class LectureService {
 
   getVorlesungById(id: number): Observable<VorlesungDto> {
     return this.http.get<VorlesungDto>(`/api/vorlesungen/${id}`);
+  }
+
+  searchVorlesungen(query: string, limit = 10): Observable<VorlesungLookupDto[]> {
+    const params = new URLSearchParams();
+    params.set('q', query);
+    params.set('limit', String(limit));
+    return this.http.get<VorlesungLookupDto[]>(`/api/vorlesungen/search?${params.toString()}`);
+  }
+
+  getKurseForVorlesung(id: number): Observable<KursLookupDto[]> {
+    return this.http.get<KursLookupDto[]>(`/api/vorlesungen/${id}/kurse`);
+  }
+
+  getEnrolledStudents(id: number): Observable<UserLookupDto[]> {
+    return this.http.get<UserLookupDto[]>(`/api/vorlesungen/${id}/students/details`);
+  }
+
+  enrollStudent(id: number, studentMatr: string): Observable<void> {
+    return this.http.post<void>(`/api/vorlesungen/${id}/enroll`, { studentMatr });
+  }
+
+  unenrollStudent(id: number, studentMatr: string): Observable<void> {
+    return this.http.delete<void>(`/api/vorlesungen/${id}/enroll/${studentMatr}`);
   }
 
   createVorlesung(request: CreateVorlesungRequest): Observable<VorlesungDto> {

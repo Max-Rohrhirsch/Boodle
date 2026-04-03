@@ -3,6 +3,7 @@ package org.boodle.backend.controller
 import io.mockk.every
 import io.mockk.mockk
 import org.boodle.backend.model.EnrollmentAlreadyExistsException
+import org.boodle.backend.model.KursInLectureService
 import org.boodle.backend.model.LectureEnrollmentService
 import org.boodle.backend.model.VorlesungLookupDTO
 import org.boodle.backend.model.VorlesungDTO
@@ -16,7 +17,8 @@ class LectureControllerMockingTest {
 
     private val vorlesungService = mockk<VorlesungService>()
     private val lectureEnrollmentService = mockk<LectureEnrollmentService>(relaxed = true)
-    private val controller = LectureController(vorlesungService, lectureEnrollmentService)
+    private val kursInLectureService = mockk<KursInLectureService>(relaxed = true)
+    private val controller = LectureController(vorlesungService, lectureEnrollmentService, kursInLectureService)
 
     @Test
     fun enrollStudent_returnsCreated_whenEnrollmentSucceeds() {

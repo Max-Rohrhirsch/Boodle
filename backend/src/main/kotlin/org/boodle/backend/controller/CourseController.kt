@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.boodle.backend.model.InvalidKursInputException
 import org.boodle.backend.model.KursInLectureAlreadyExistsException
+import org.boodle.backend.model.KursStudentAlreadyExistsException
 import org.boodle.backend.model.KursNotFoundException
+import org.boodle.backend.model.KursEnrollmentService
 import org.boodle.backend.model.KursService
 import org.boodle.backend.model.KursInLectureService
 import org.boodle.backend.model.VorlesungNotFoundException
@@ -25,7 +27,8 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Courses")
 class CourseController(
     private val kursService: KursService,
-    private val kursInLectureService: KursInLectureService
+    private val kursInLectureService: KursInLectureService,
+    private val kursEnrollmentService: KursEnrollmentService
 ) {
 
     @GetMapping
@@ -46,6 +49,24 @@ class CourseController(
     fun getKursById(@PathVariable id: Int): ResponseEntity<Any> =
         try {
             ResponseEntity.ok(kursService.getKursById(id))
+        } catch (e: KursNotFoundException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Kurs not found"))
+        }
+
+    @GetMapping("/{id}/vorlesungen")
+    @Operation(summary = "Get lectures assigned to course")
+    fun getLecturesForKurs(@PathVariable id: Int): ResponseEntity<Any> =
+        try {
+            ResponseEntity.ok(kursInLectureService.getLecturesForKurs(id))
+        } catch (e: KursNotFoundException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Kurs not found"))
+        }
+
+    @GetMapping("/{id}/students")
+    @Operation(summary = "Get students assigned to course")
+    fun getStudentsForKurs(@PathVariable id: Int): ResponseEntity<Any> =
+        try {
+            ResponseEntity.ok(kursEnrollmentService.getEnrolledStudentsForKurs(id))
         } catch (e: KursNotFoundException) {
             ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Kurs not found"))
         }
@@ -116,6 +137,30 @@ class CourseController(
             ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Assignment not found"))
         }
 
+    @PostMapping("/{id}/students")
+    @Operation(summary = "Assign student to course")
+    fun enrollStudentToKurs(@PathVariable id: Int, @RequestBody request: EnrollKursStudentRequest): ResponseEntity<Any> =
+        try {
+            kursEnrollmentService.enrollStudentToKurs(id, request.studentMatr)
+            ResponseEntity.status(HttpStatus.CREATED).build()
+        } catch (e: KursNotFoundException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Kurs not found"))
+        } catch (e: KursStudentAlreadyExistsException) {
+            ResponseEntity.status(HttpStatus.CONFLICT).body(errorBody(HttpStatus.CONFLICT, e.message ?: "Student already assigned"))
+        } catch (e: InvalidKursInputException) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody(HttpStatus.BAD_REQUEST, e.message ?: "Invalid request"))
+        }
+
+    @DeleteMapping("/{id}/students/{matr}")
+    @Operation(summary = "Remove student from course")
+    fun unenrollStudentFromKurs(@PathVariable id: Int, @PathVariable matr: String): ResponseEntity<Any> =
+        try {
+            kursEnrollmentService.unenrollStudentFromKurs(id, matr)
+            ResponseEntity.noContent().build()
+        } catch (e: KursStudentAlreadyExistsException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorBody(HttpStatus.NOT_FOUND, e.message ?: "Assignment not found"))
+        }
+
     private fun errorBody(status: HttpStatus, message: String): Map<String, Any> = mapOf(
         "status" to status.value(),
         "error" to status.reasonPhrase,
@@ -134,4 +179,8 @@ data class UpdateKursRequest(
     val name: String?,
     val kurssprecher1Matr: String?,
     val kurssprecher2Matr: String?
+)
+
+data class EnrollKursStudentRequest(
+    val studentMatr: String
 )

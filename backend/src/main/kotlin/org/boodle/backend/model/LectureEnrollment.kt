@@ -2,6 +2,7 @@ package org.boodle.backend.model
 
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -59,5 +60,17 @@ class LectureEnrollmentService {
         LectureEnrollmentTable.select { LectureEnrollmentTable.vorlesungId eq vorlesungId }
             .map { it[LectureEnrollmentTable.studentMatr] }
             .toList()
+    }
+
+    fun getEnrolledStudentUsers(vorlesungId: Int): List<UserLookupDTO> = transaction {
+        Vorlesung.findById(vorlesungId) ?: throw VorlesungNotFoundException(vorlesungId)
+
+        val studentMatrs = LectureEnrollmentTable.select { LectureEnrollmentTable.vorlesungId eq vorlesungId }
+            .map { it[LectureEnrollmentTable.studentMatr] }
+
+        if (studentMatrs.isEmpty()) return@transaction emptyList()
+
+        User.find { UsersTable.matr inList studentMatrs }
+            .map { it.toLookupDTO() }
     }
 }

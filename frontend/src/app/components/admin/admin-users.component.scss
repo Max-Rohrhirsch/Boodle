@@ -50,6 +50,10 @@ select:focus {
   border-color: #35CF78;
 }
 
+input[readonly] {
+  background: #f2f2f2;
+}
+
 .btn {
   padding: 8px 12px;
   border: none;
@@ -76,6 +80,29 @@ select:focus {
 
 .btn-success:hover {
   background: #5DF991;
+}
+
+.btn-secondary {
+  background: #999;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #777;
+}
+
+.btn-danger {
+  background: #d32f2f;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #b71c1c;
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 table {

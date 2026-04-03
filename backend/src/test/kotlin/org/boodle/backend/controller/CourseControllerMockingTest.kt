@@ -4,9 +4,12 @@ import io.mockk.every
 import io.mockk.mockk
 import org.boodle.backend.model.InvalidKursInputException
 import org.boodle.backend.model.KursDTO
+import org.boodle.backend.model.KursEnrollmentService
 import org.boodle.backend.model.KursInLectureService
 import org.boodle.backend.model.KursLookupDTO
 import org.boodle.backend.model.KursService
+import org.boodle.backend.model.UserRole
+import org.boodle.backend.model.UserLookupDTO
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -16,7 +19,8 @@ class CourseControllerMockingTest {
 
     private val kursService = mockk<KursService>()
     private val kursInLectureService = mockk<KursInLectureService>()
-    private val controller = CourseController(kursService, kursInLectureService)
+    private val kursEnrollmentService = mockk<KursEnrollmentService>(relaxed = true)
+    private val controller = CourseController(kursService, kursInLectureService, kursEnrollmentService)
 
     @Test
     fun createKurs_returnsCreated_whenServiceSucceeds() {
@@ -76,5 +80,31 @@ class CourseControllerMockingTest {
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals(result, response.body)
+    }
+
+    @Test
+    fun getStudentsForKurs_returnsLookupResults() {
+        val result = listOf(
+            UserLookupDTO(
+                matr = "1234567",
+                name = "Student Test",
+                email = "student@test.de",
+                rolle = UserRole.STUDENT
+            )
+        )
+
+        every { kursEnrollmentService.getEnrolledStudentsForKurs(1) } returns result
+
+        val response = controller.getStudentsForKurs(1)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(result, response.body)
+    }
+
+    @Test
+    fun enrollStudentToKurs_returnsCreated_whenServiceSucceeds() {
+        val response = controller.enrollStudentToKurs(1, EnrollKursStudentRequest(studentMatr = "1234567"))
+
+        assertEquals(HttpStatus.CREATED, response.statusCode)
     }
 }
