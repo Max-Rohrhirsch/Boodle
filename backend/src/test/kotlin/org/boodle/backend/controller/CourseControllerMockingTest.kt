@@ -5,6 +5,7 @@ import io.mockk.mockk
 import org.boodle.backend.model.InvalidKursInputException
 import org.boodle.backend.model.KursDTO
 import org.boodle.backend.model.KursInLectureService
+import org.boodle.backend.model.KursLookupDTO
 import org.boodle.backend.model.KursService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -63,5 +64,17 @@ class CourseControllerMockingTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
         val body = response.body as Map<*, *>
         assertEquals("Bad Request", body["error"])
+    }
+
+    @Test
+    fun searchKurse_returnsLookupResults() {
+        val result = listOf(KursLookupDTO(id = 1, name = "Mathe 1"))
+
+        every { kursService.searchKurse("mat", 10) } returns result
+
+        val response = controller.searchKurse("mat", 10)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(result, response.body)
     }
 }

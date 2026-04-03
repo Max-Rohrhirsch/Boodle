@@ -3,6 +3,7 @@ package org.boodle.backend.controller
 import io.mockk.every
 import io.mockk.mockk
 import org.boodle.backend.model.CreateUserRequest
+import org.boodle.backend.model.UserLookupDTO
 import org.boodle.backend.model.UserAlreadyExistsException
 import org.boodle.backend.model.UserRole
 import org.boodle.backend.model.UserService
@@ -40,5 +41,24 @@ class UserControllerMockingTest {
         assertEquals(HttpStatus.CONFLICT, response.statusCode)
         val body = response.body as Map<*, *>
         assertEquals("Conflict", body["error"])
+    }
+
+    @Test
+    fun searchUsers_returnsLookupResults() {
+        val result = listOf(
+            UserLookupDTO(
+                matr = "D1000001",
+                name = "Dozent Test",
+                email = "dozent@test.de",
+                rolle = UserRole.DOZENT
+            )
+        )
+
+        every { userService.searchUsers("doz", UserRole.DOZENT, 10) } returns result
+
+        val response = controller.searchUsers("doz", UserRole.DOZENT, 10)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(result, response.body)
     }
 }

@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.boodle.backend.model.EnrollmentAlreadyExistsException
 import org.boodle.backend.model.LectureEnrollmentService
+import org.boodle.backend.model.VorlesungLookupDTO
 import org.boodle.backend.model.VorlesungDTO
 import org.boodle.backend.model.VorlesungService
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -53,5 +54,23 @@ class LectureControllerMockingTest {
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals(listOf(dto), response.body)
+    }
+
+    @Test
+    fun searchVorlesungen_returnsLookupResults() {
+        val result = listOf(
+            VorlesungLookupDTO(
+                id = 7,
+                code = "INF201",
+                name = "Softwaretechnik"
+            )
+        )
+
+        every { vorlesungService.searchVorlesungen("soft", 10) } returns result
+
+        val response = controller.searchVorlesungen("soft", 10)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(result, response.body)
     }
 }

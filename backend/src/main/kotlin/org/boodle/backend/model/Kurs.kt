@@ -28,6 +28,11 @@ data class KursDTO(
     val updatedAt: LocalDateTime
 )
 
+data class KursLookupDTO(
+    val id: Int,
+    val name: String
+)
+
 class Kurs(id: EntityID<Int>) : Entity<Int>(id) {
     companion object : EntityClass<Int, Kurs>(KursTable)
 
@@ -49,6 +54,11 @@ fun Kurs.toDTO(): KursDTO = KursDTO(
     updatedAt = updatedAt
 )
 
+fun Kurs.toLookupDTO(): KursLookupDTO = KursLookupDTO(
+    id = id.value,
+    name = name
+)
+
 class KursNotFoundException(id: Int) : RuntimeException("Kurs with ID '$id' was not found.")
 class InvalidKursInputException(message: String) : RuntimeException(message)
 
@@ -61,6 +71,18 @@ class KursService {
 
     fun getKursById(id: Int): KursDTO = transaction {
         Kurs.findById(id)?.toDTO() ?: throw KursNotFoundException(id)
+    }
+
+    fun searchKurse(query: String, limit: Int): List<KursLookupDTO> = transaction {
+        val normalizedQuery = query.trim().lowercase()
+        if (normalizedQuery.isBlank()) return@transaction emptyList()
+
+        Kurs.all()
+            .asSequence()
+            .filter { it.name.lowercase().contains(normalizedQuery) }
+            .map { it.toLookupDTO() }
+            .take(limit.coerceIn(1, 50))
+            .toList()
     }
 
     fun create(

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -30,6 +31,14 @@ class LectureController(
     @Operation(summary = "Get all lectures")
     fun getAllVorlesungen(): ResponseEntity<Any> =
         ResponseEntity.ok(vorlesungService.getAllVorlesungen())
+
+    @GetMapping("/search")
+    @Operation(summary = "Search lectures for autocomplete")
+    fun searchVorlesungen(
+        @RequestParam("q") query: String,
+        @RequestParam("limit", required = false, defaultValue = "10") limit: Int
+    ): ResponseEntity<Any> =
+        ResponseEntity.ok(vorlesungService.searchVorlesungen(query, limit))
 
     @GetMapping("/{id}")
     @Operation(summary = "Get lecture by ID")

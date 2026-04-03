@@ -33,6 +33,13 @@ data class UserDTO(
     val updatedAt: LocalDateTime
 )
 
+data class UserLookupDTO(
+    val matr: String,
+    val name: String,
+    val email: String,
+    val rolle: UserRole
+)
+
 data class CreateUserRequest(
     val matr: String,
     val name: String,
@@ -67,6 +74,13 @@ fun User.toDTO(): UserDTO = UserDTO(
     updatedAt = updatedAt
 )
 
+fun User.toLookupDTO(): UserLookupDTO = UserLookupDTO(
+    matr = id.value,
+    name = name,
+    email = email,
+    rolle = rolle
+)
+
 class UserNotFoundException(matr: String) : RuntimeException("User with matr '$matr' was not found.")
 class UserAlreadyExistsException(matr: String) : RuntimeException("User with matr '$matr' already exists.")
 class InvalidUserInputException(message: String) : RuntimeException(message)
@@ -81,6 +95,23 @@ class UserService {
 
     fun getUserByMatr(matr: String): UserDTO = transaction {
         User.findById(matr)?.toDTO() ?: throw UserNotFoundException(matr)
+    }
+
+    fun searchUsers(query: String, rolle: UserRole?, limit: Int): List<UserLookupDTO> = transaction {
+        val normalizedQuery = query.trim().lowercase()
+        if (normalizedQuery.isBlank()) return@transaction emptyList()
+
+        User.all()
+            .asSequence()
+            .filter { rolle == null || it.rolle == rolle }
+            .filter {
+                it.id.value.lowercase().contains(normalizedQuery) ||
+                it.name.lowercase().contains(normalizedQuery) ||
+                it.email.lowercase().contains(normalizedQuery)
+            }
+            .map { it.toLookupDTO() }
+            .take(limit.coerceIn(1, 50))
+            .toList()
     }
 
     fun findByEmail(email: String): User? = transaction {

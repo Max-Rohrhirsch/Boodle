@@ -31,6 +31,12 @@ data class VorlesungDTO(
     val updatedAt: LocalDateTime
 )
 
+data class VorlesungLookupDTO(
+    val id: Int,
+    val code: String,
+    val name: String
+)
+
 class Vorlesung(id: EntityID<Int>) : Entity<Int>(id) {
     companion object : EntityClass<Int, Vorlesung>(VorlesungTable)
 
@@ -54,6 +60,12 @@ fun Vorlesung.toDTO(): VorlesungDTO = VorlesungDTO(
     updatedAt = updatedAt
 )
 
+fun Vorlesung.toLookupDTO(): VorlesungLookupDTO = VorlesungLookupDTO(
+    id = id.value,
+    code = code,
+    name = name
+)
+
 class VorlesungNotFoundException(id: Int) : RuntimeException("Vorlesung with ID '$id' was not found.")
 class VorlesungCodeAlreadyExistsException(code: String) : RuntimeException("Vorlesung with code '$code' already exists.")
 class InvalidVorlesungInputException(message: String) : RuntimeException(message)
@@ -67,6 +79,21 @@ class VorlesungService {
 
     fun getVorlesungById(id: Int): VorlesungDTO = transaction {
         Vorlesung.findById(id)?.toDTO() ?: throw VorlesungNotFoundException(id)
+    }
+
+    fun searchVorlesungen(query: String, limit: Int): List<VorlesungLookupDTO> = transaction {
+        val normalizedQuery = query.trim().lowercase()
+        if (normalizedQuery.isBlank()) return@transaction emptyList()
+
+        Vorlesung.all()
+            .asSequence()
+            .filter {
+                it.code.lowercase().contains(normalizedQuery) ||
+                it.name.lowercase().contains(normalizedQuery)
+            }
+            .map { it.toLookupDTO() }
+            .take(limit.coerceIn(1, 50))
+            .toList()
     }
 
     fun create(
