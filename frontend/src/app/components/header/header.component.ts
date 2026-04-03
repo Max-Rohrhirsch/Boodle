@@ -27,6 +27,10 @@ export class HeaderComponent {
     return this.authService.getCurrentUserRole() === 'ADMIN';
   }
 
+  protected isDozent(): boolean {
+    return this.authService.getCurrentUserRole() === 'DOZENT';
+  }
+
   protected onLogout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);

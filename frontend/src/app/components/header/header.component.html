@@ -10,6 +10,11 @@
         <a routerLink="/admin/lectures" routerLinkActive="active">Vorlesungen</a>
         <a routerLink="/admin/users" routerLinkActive="active">User</a>
       </ng-container>
+
+      <ng-container *ngIf="isDozent()">
+        <a routerLink="/dozent/lectures" routerLinkActive="active">Vorlesungsverwaltung</a>
+        <a routerLink="/dozent/schedule" routerLinkActive="active">Stundenplan</a>
+      </ng-container>
     </nav>
 
     <div class="user-actions">
