@@ -18,11 +18,13 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.boodle.backend.security.SecurityUtils
 
 class KursEnrollmentIntegrationTest {
 
     private val userService = UserService()
-    private val kursService = KursService()
+    private val securityUtils = SecurityUtils()
+    private val kursService = KursService(securityUtils)
     private val kursEnrollmentService = KursEnrollmentService()
 
     companion object {
@@ -116,3 +118,4 @@ class KursEnrollmentIntegrationTest {
         val kursId: Int
     )
 }
+

@@ -11,6 +11,7 @@ import org.boodle.backend.model.UsersTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.boodle.backend.security.SecurityUtils
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeAll
@@ -20,7 +21,8 @@ import org.junit.jupiter.api.Test
 class KursServiceIntegrationTest {
 
     private val userService = UserService()
-    private val kursService = KursService()
+    private val securityUtils = SecurityUtils()
+    private val kursService = KursService(securityUtils)
 
     companion object {
         @JvmStatic
@@ -83,3 +85,4 @@ class KursServiceIntegrationTest {
         assertEquals("Dozent with matr 'D9999999' not found.", exception.message)
     }
 }
+

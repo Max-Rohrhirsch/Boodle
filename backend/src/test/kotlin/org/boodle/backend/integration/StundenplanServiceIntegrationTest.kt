@@ -19,6 +19,7 @@ import org.boodle.backend.model.Vorlesung
 import org.boodle.backend.model.VorlesungService
 import org.boodle.backend.model.VorlesungTable
 import org.boodle.backend.model.Wochentag
+import org.boodle.backend.security.SecurityUtils
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -36,7 +37,8 @@ class StundenplanServiceIntegrationTest {
     private val userService = UserService()
     private val vorlesungService = VorlesungService()
     private val raumService = RaumService()
-    private val stundenplanService = StundenplanService()
+    private val securityUtils = SecurityUtils()
+    private val stundenplanService = StundenplanService(securityUtils)
 
     companion object {
         @JvmStatic
@@ -64,12 +66,14 @@ class StundenplanServiceIntegrationTest {
     @BeforeEach
     fun clearTables() {
         transaction {
-            UnregulaereStunde.all().forEach { it.delete() }
             RegulaereStunde.all().forEach { it.delete() }
+            UnregulaereStunde.all().forEach { it.delete() }
             Vorlesung.all().forEach { it.delete() }
             Raum.all().forEach { it.delete() }
             User.all().forEach { it.delete() }
         }
+        // Clear security context
+        org.springframework.security.core.context.SecurityContextHolder.clearContext()
     }
 
     @Test
@@ -201,6 +205,10 @@ class StundenplanServiceIntegrationTest {
             code = "A-101",
             beschreibung = "Hauptgebaeude"
         )
+
+        // Set security context for the created course's instructor
+        val auth = org.springframework.security.authentication.UsernamePasswordAuthenticationToken("D1000001", null, emptyList())
+        org.springframework.security.core.context.SecurityContextHolder.getContext().authentication = auth
 
         return SeedData(vorlesungId = lecture.id, raumId = room.id)
     }

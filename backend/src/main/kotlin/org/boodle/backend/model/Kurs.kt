@@ -1,5 +1,6 @@
 package org.boodle.backend.model
 
+import org.boodle.backend.security.SecurityUtils
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -61,9 +62,11 @@ fun Kurs.toLookupDTO(): KursLookupDTO = KursLookupDTO(
 
 class KursNotFoundException(id: Int) : RuntimeException("Kurs with ID '$id' was not found.")
 class InvalidKursInputException(message: String) : RuntimeException(message)
+class KursAccessDeniedException(kursId: Int, userMatr: String) : 
+    RuntimeException("User '$userMatr' is not the instructor of Kurs '$kursId' and cannot modify it.")
 
 @Service
-class KursService {
+class KursService(private val securityUtils: SecurityUtils) {
 
     fun getAllKurse(): List<KursDTO> = transaction {
         Kurs.all().map { it.toDTO() }
@@ -120,6 +123,12 @@ class KursService {
         kurssprecher2Matr: String?
     ): KursDTO = transaction {
         val kurs = Kurs.findById(id) ?: throw KursNotFoundException(id)
+        
+        // Ownership check: only instructor can modify their own course
+        val currentUserMatr = securityUtils.requireCurrentUserMatr()
+        if (kurs.dozentMatr != currentUserMatr) {
+            throw KursAccessDeniedException(id, currentUserMatr)
+        }
 
         name?.let {
             val normalizedName = it.trim()
@@ -140,6 +149,13 @@ class KursService {
 
     fun delete(id: Int) = transaction {
         val kurs = Kurs.findById(id) ?: throw KursNotFoundException(id)
+        
+        // Ownership check: only instructor can delete their own course
+        val currentUserMatr = securityUtils.requireCurrentUserMatr()
+        if (kurs.dozentMatr != currentUserMatr) {
+            throw KursAccessDeniedException(id, currentUserMatr)
+        }
+        
         kurs.delete()
     }
 }

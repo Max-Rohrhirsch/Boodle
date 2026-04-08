@@ -10,6 +10,7 @@ import org.boodle.backend.model.LectureEnrollmentService
 import org.boodle.backend.model.KursInLectureService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -61,6 +62,7 @@ class LectureController(
         }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOZENT')")
     @Operation(summary = "Create lecture")
     fun createVorlesung(@RequestBody request: CreateVorlesungRequest): ResponseEntity<Any> =
         try {
@@ -77,6 +79,7 @@ class LectureController(
         }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update lecture")
     fun updateVorlesung(@PathVariable id: Int, @RequestBody request: UpdateVorlesungRequest): ResponseEntity<Any> =
         try {
@@ -94,6 +97,7 @@ class LectureController(
         }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete lecture")
     fun deleteVorlesung(@PathVariable id: Int): ResponseEntity<Any> =
         try {
@@ -104,6 +108,7 @@ class LectureController(
         }
 
     @PostMapping("/{id}/enroll")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Directly enroll a student")
     fun enrollStudent(@PathVariable id: Int, @RequestBody request: EnrollStudentRequest): ResponseEntity<Any> =
         try {
@@ -118,6 +123,7 @@ class LectureController(
         }
 
     @DeleteMapping("/{id}/enroll/{matr}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Unenroll a student")
     fun unenrollStudent(@PathVariable id: Int, @PathVariable matr: String): ResponseEntity<Any> =
         try {

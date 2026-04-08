@@ -1,5 +1,6 @@
 package org.boodle.backend.model
 
+import org.boodle.backend.security.SecurityUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
@@ -12,9 +13,13 @@ import java.time.LocalTime
 
 class StundenplanValidationException(message: String) : RuntimeException(message)
 class RaumDoppelbuchungException(message: String) : RuntimeException(message)
+class VorlesungAccessDeniedException(vorlesungId: Int, userMatr: String) : 
+    RuntimeException("User '$userMatr' is not the instructor of Vorlesung '$vorlesungId' and cannot modify its schedule.")
+class RaumKapazitaetException(raumId: Int, enrolled: Int, kapazitaet: Int) :
+    RuntimeException("Raum $raumId capacity exceeded: $enrolled enrolled students, but room capacity is only $kapazitaet.")
 
 @Service
-class StundenplanService {
+class StundenplanService(private val securityUtils: SecurityUtils) {
 
     fun getAllRegulaereStunden(): List<RegulaereStundeDTO> = transaction {
         RegulaereStunde.all().map { it.toDTO() }
@@ -40,6 +45,14 @@ class StundenplanService {
         bisDatum: LocalDate,
         online: Boolean
     ): RegulaereStundeDTO = transaction {
+        val vorlesung = Vorlesung.findById(vorlesungId) ?: throw VorlesungNotFoundException(vorlesungId)
+        
+        // Ownership check: only instructor can create their lecture slots
+        val currentUserMatr = securityUtils.requireCurrentUserMatr()
+        if (vorlesung.dozentMatr != currentUserMatr) {
+            throw VorlesungAccessDeniedException(vorlesungId, currentUserMatr)
+        }
+        
         validateBasics(vorlesungId, vortragsnummer, vonUhrzeit, bisUhrzeit)
         if (vonDatum.isAfter(bisDatum)) {
             throw StundenplanValidationException("vonDatum must be before or equal to bisDatum.")
@@ -74,6 +87,13 @@ class StundenplanService {
         online: Boolean
     ): RegulaereStundeDTO = transaction {
         val stunde = RegulaereStunde.findById(id) ?: throw RegulaereStundeNotFoundException(id)
+        val vorlesung = Vorlesung.findById(stunde.vorlesungId) ?: throw VorlesungNotFoundException(stunde.vorlesungId)
+        
+        // Ownership check: only instructor can modify their lecture slots
+        val currentUserMatr = securityUtils.requireCurrentUserMatr()
+        if (vorlesung.dozentMatr != currentUserMatr) {
+            throw VorlesungAccessDeniedException(stunde.vorlesungId, currentUserMatr)
+        }
 
         validateBasics(stunde.vorlesungId, vortragsnummer, vonUhrzeit, bisUhrzeit)
         if (vonDatum.isAfter(bisDatum)) {
@@ -96,6 +116,14 @@ class StundenplanService {
 
     fun deleteRegulaereStunde(id: Int) = transaction {
         val stunde = RegulaereStunde.findById(id) ?: throw RegulaereStundeNotFoundException(id)
+        val vorlesung = Vorlesung.findById(stunde.vorlesungId) ?: throw VorlesungNotFoundException(stunde.vorlesungId)
+        
+        // Ownership check: only instructor can delete their lecture slots
+        val currentUserMatr = securityUtils.requireCurrentUserMatr()
+        if (vorlesung.dozentMatr != currentUserMatr) {
+            throw VorlesungAccessDeniedException(stunde.vorlesungId, currentUserMatr)
+        }
+        
         stunde.delete()
     }
 
@@ -123,6 +151,14 @@ class StundenplanService {
         raumId: Int?,
         online: Boolean
     ): UnregulaereStundeDTO = transaction {
+        val vorlesung = Vorlesung.findById(vorlesungId) ?: throw VorlesungNotFoundException(vorlesungId)
+        
+        // Ownership check: only instructor can create their lecture slots
+        val currentUserMatr = securityUtils.requireCurrentUserMatr()
+        if (vorlesung.dozentMatr != currentUserMatr) {
+            throw VorlesungAccessDeniedException(vorlesungId, currentUserMatr)
+        }
+        
         validateBasics(vorlesungId, vortragsnummer, vonUhrzeit, bisUhrzeit)
         val normalizedRaumId = validateRoomChoice(online, raumId)
         checkIrregularConflicts(null, status, normalizedRaumId, datum, vonUhrzeit, bisUhrzeit)
@@ -154,6 +190,13 @@ class StundenplanService {
         online: Boolean
     ): UnregulaereStundeDTO = transaction {
         val stunde = UnregulaereStunde.findById(id) ?: throw UnregulaereStundeNotFoundException(id)
+        val vorlesung = Vorlesung.findById(stunde.vorlesungId) ?: throw VorlesungNotFoundException(stunde.vorlesungId)
+        
+        // Ownership check: only instructor can modify their lecture slots
+        val currentUserMatr = securityUtils.requireCurrentUserMatr()
+        if (vorlesung.dozentMatr != currentUserMatr) {
+            throw VorlesungAccessDeniedException(stunde.vorlesungId, currentUserMatr)
+        }
 
         validateBasics(stunde.vorlesungId, vortragsnummer, vonUhrzeit, bisUhrzeit)
         val normalizedRaumId = validateRoomChoice(online, raumId)
@@ -173,6 +216,14 @@ class StundenplanService {
 
     fun deleteUnregulaereStunde(id: Int) = transaction {
         val stunde = UnregulaereStunde.findById(id) ?: throw UnregulaereStundeNotFoundException(id)
+        val vorlesung = Vorlesung.findById(stunde.vorlesungId) ?: throw VorlesungNotFoundException(stunde.vorlesungId)
+        
+        // Ownership check: only instructor can delete their lecture slots
+        val currentUserMatr = securityUtils.requireCurrentUserMatr()
+        if (vorlesung.dozentMatr != currentUserMatr) {
+            throw VorlesungAccessDeniedException(stunde.vorlesungId, currentUserMatr)
+        }
+        
         stunde.delete()
     }
 

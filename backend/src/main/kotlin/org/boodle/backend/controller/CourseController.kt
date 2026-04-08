@@ -12,6 +12,7 @@ import org.boodle.backend.model.KursInLectureService
 import org.boodle.backend.model.VorlesungNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -72,6 +73,7 @@ class CourseController(
         }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOZENT')")
     @Operation(summary = "Create course")
     fun createKurs(@RequestBody request: CreateKursRequest): ResponseEntity<Any> =
         try {
@@ -87,6 +89,7 @@ class CourseController(
         }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update course")
     fun updateKurs(@PathVariable id: Int, @RequestBody request: UpdateKursRequest): ResponseEntity<Any> =
         try {
@@ -104,6 +107,7 @@ class CourseController(
         }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete course")
     fun deleteKurs(@PathVariable id: Int): ResponseEntity<Any> =
         try {

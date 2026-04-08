@@ -12,6 +12,7 @@ import org.boodle.backend.model.UserRole
 import org.boodle.backend.model.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -69,6 +70,7 @@ class UserController(private val userService: UserService) {
         }
 
     @PutMapping("/{matr}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update user")
     fun updateUser(@PathVariable matr: String, @RequestBody request: UpdateUserRequest): ResponseEntity<Any> =
         try {
@@ -86,6 +88,7 @@ class UserController(private val userService: UserService) {
         }
 
     @DeleteMapping("/{matr}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete user")
     fun deleteUser(@PathVariable matr: String): ResponseEntity<Any> =
         try {
